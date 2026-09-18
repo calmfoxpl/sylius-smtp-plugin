@@ -17,6 +17,12 @@ calmfox_smtp_test:
     defaults:
         _controller: calmfox_smtp.controller.test
 
+calmfox_smtp_dns:
+    path: /smtp/dns
+    methods: [POST]
+    defaults:
+        _controller: calmfox_smtp.controller.dns
+
 calmfox_smtp_settings:
     path: /smtp/settings
     methods: [GET, POST]

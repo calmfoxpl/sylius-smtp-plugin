@@ -82,6 +82,17 @@
         </div>
 
         <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.dns'|trans }}</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">{{ 'calmfox_smtp.settings.dns_help'|trans }}</p>
+                <div data-calmfox-smtp-action data-url="{{ path('calmfox_smtp_dns') }}">
+                    <button type="button" class="btn btn-secondary" data-role="submit">{{ 'calmfox_smtp.settings.dns_button'|trans }}</button>
+                    <div class="mt-3" data-role="result"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
             <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.alerts'|trans }}</h3></div>
             <div class="card-body">
                 <p class="text-secondary">{{ 'calmfox_smtp.settings.alerts_help'|trans }}</p>
@@ -102,4 +113,5 @@
 {% block javascripts %}
     {{ parent() }}
     {% include '@CalmfoxSyliusSmtpPlugin/admin/_presets_script.html.twig' %}
+    {% include '@CalmfoxSyliusSmtpPlugin/admin/_actions_script.html.twig' %}
 {% endblock %}

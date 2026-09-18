@@ -40,6 +40,9 @@ final class TranslationsTest extends TestCase
         'Australia',
         'Frankfurt',
         'Oregon',
+        'calmfox_smtp.report.domain.spf',
+        'calmfox_smtp.report.domain.dkim',
+        'calmfox_smtp.report.domain.dmarc',
     ];
 
     public function testEveryCauseHasASentenceInBothLanguages(): void

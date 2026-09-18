@@ -65,6 +65,29 @@ services:
         tags:
             - { name: monolog.logger, channel: mailer }
 
+    # ── what the sender domain publishes ─────────────────────────────────────
+    #
+    # The core asks DNS through an interface so its reasoning can be tested against written-down
+    # zones; this is the only implementation, and it is the system resolver.
+    calmfox_smtp.dns.resolver:
+        class: Calmfox\SyliusSmtpPlugin\Dns\PhpResolver
+
+    calmfox_smtp.dns.inspector:
+        class: Calmfox\SyliusSmtpPlugin\Core\Dns\DomainInspector
+        arguments:
+            $dns: '@calmfox_smtp.dns.resolver'
+
+    calmfox_smtp.dns.check:
+        class: Calmfox\SyliusSmtpPlugin\Dns\DomainCheck
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $inspector: '@calmfox_smtp.dns.inspector'
+            $cache: '@cache.app'
+            $logger: '@logger'
+            $enabled: '%calmfox_sylius_smtp.dns_enabled%'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
     # ── who is told ──────────────────────────────────────────────────────────
     calmfox_smtp.alert.email:
         class: Calmfox\SyliusSmtpPlugin\Alert\EmailChannel
@@ -185,6 +208,7 @@ services:
         public: true
         arguments:
             $monitor: '@calmfox_smtp.health.monitor'
+            $domains: '@calmfox_smtp.dns.check'
             $settings: '@calmfox_smtp.settings.provider'
             $wording: '@calmfox_smtp.wording'
             $twig: '@twig'
@@ -204,6 +228,15 @@ services:
         public: true
         arguments:
             $sender: '@calmfox_smtp.mailer.test_sender'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.dns:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\DnsAction
+        public: true
+        arguments:
+            $domains: '@calmfox_smtp.dns.check'
             $settings: '@calmfox_smtp.settings.provider'
             $wording: '@calmfox_smtp.wording'
         tags: ['controller.service_arguments']
@@ -249,6 +282,7 @@ services:
         class: Calmfox\SyliusSmtpPlugin\Twig\HealthExtension
         arguments:
             $store: '@calmfox_smtp.health.store'
+            $domains: '@calmfox_smtp.dns.check'
             $settings: '@calmfox_smtp.settings.provider'
             $wording: '@calmfox_smtp.wording'
         tags: ['twig.extension']
@@ -266,6 +300,13 @@ services:
         class: Calmfox\SyliusSmtpPlugin\Command\TestCommand
         arguments:
             $sender: '@calmfox_smtp.mailer.test_sender'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['console.command']
+
+    calmfox_smtp.command.dns:
+        class: Calmfox\SyliusSmtpPlugin\Command\CheckDomainCommand
+        arguments:
+            $domains: '@calmfox_smtp.dns.check'
             $wording: '@calmfox_smtp.wording'
         tags: ['console.command']
 

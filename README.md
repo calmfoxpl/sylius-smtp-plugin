@@ -26,9 +26,26 @@ asking where their confirmation is, two days later.
   says goodbye — without sending a message. No quota is used, no inbox is touched, and the
   failures that actually happen are caught: an expired key, a rotated password, a blocked port, an
   untrusted certificate, a mechanism a provider has dropped.
+- **A check on whether the mail will be believed.** The connection check proves the shop can hand
+  a message to its provider; it cannot say whether a receiver will accept it. So the sender
+  domain's own records are read — SPF, DKIM and DMARC — and the one question that matters is
+  answered: does the domain actually authorise the provider this shop sends through? A shop that
+  moved providers and never updated SPF sends perfectly happily for weeks while Gmail files
+  everything under spam, and its own test message, sent to a colleague at the same domain,
+  arrives beautifully. Nested records are followed one level, the way a receiver does, so an
+  agency's record in the middle is not mistaken for a fault. The provider-to-record table was
+  checked against live DNS rather than written from memory, and where a provider mints a DKIM
+  selector per domain — Amazon and Postmark among them — nothing is claimed at all, because the
+  absence of a name we guessed would prove nothing.
+- **A suggestion from DNS while the settings are empty.** A submission service published under
+  RFC 6186, and the provider the domain's own SPF says it is already set up for — offered as a
+  question, never filled in, and never carrying a credential, because DNS can say which service
+  a domain uses and never who the shop is at that service.
 - **A warning that reaches somebody.** Four channels, because on a shop whose mail is down one of
   them is broken by definition:
-  - a notice on the dashboard and a mark in the menu,
+  - a notice on the dashboard and a mark in the menu — and a separate, amber one for the domain,
+    because "cannot send" and "may not be arriving" are different jobs on different clocks and
+    one colour for both would get both ignored,
   - an e-mail, sent deliberately through the server's own local mail command rather than the
     provider that is not working,
   - a webhook for Slack, Teams, Discord or a monitor of your own,
@@ -66,9 +83,13 @@ Worth saying plainly, because a plugin that overstates this is worse than none:
 - **It cannot tell you a message was delivered.** The check proves a connection and a login. Only
   a real message proves delivery, and only the mailbox it lands in can tell you whether it reached
   the inbox or the spam folder. The panel has a button for sending one, and says as much.
-- **It does not fix deliverability.** SPF, DKIM and DMARC are records on your domain. The plugin
-  will tell you when the settings are right and the mail still is not arriving, which is the point
-  at which those records are the thing to look at.
+- **It reads deliverability records; it does not fix them.** SPF, DKIM and DMARC live on your
+  domain and are changed where that domain is hosted. The plugin reads them, says plainly when
+  they do not authorise the provider in use, and stops there — it will not edit anybody's DNS.
+- **Reading them is not the whole of deliverability.** Reputation, complaint rates, content
+  filtering and whatever a provider's own dashboard knows are all outside what DNS can answer. A
+  domain with perfect records can still be filtered, and the panel says what it checked rather
+  than implying it checked everything.
 - **It does not queue.** A message that cannot be sent fails, exactly as it would without the
   plugin — and is then in the log, where it can be sent again.
 - **It does not use provider HTTP APIs.** One SMTP path, which every provider in the list
@@ -128,6 +149,7 @@ it periodic:
 
 ```
 */15 * * * * cd /path/to/shop && bin/console calmfox:smtp:health --quiet
+41 */6 * * * cd /path/to/shop && bin/console calmfox:smtp:dns --quiet
 0 3 * * *    cd /path/to/shop && bin/console calmfox:smtp:log:prune --quiet
 ```
 
@@ -157,6 +179,8 @@ calmfox_sylius_smtp:
         recipient: 'shop@example.com'
         webhook: true
         webhook_url: '%env(SMTP_ALERT_WEBHOOK)%'
+    dns:
+        enabled: true           # read what the sending domain publishes: SPF, DKIM, DMARC
     log:
         store_body: true        # only for failures, and only what makes a resend possible
         retention_days: 30
@@ -171,6 +195,7 @@ panel is encrypted with the application secret.
 bin/console calmfox:smtp:health          # 0 works, 1 a problem that may pass, 2 broken, 3 not configured
 bin/console calmfox:smtp:health --json   # the whole verdict, credentials excluded
 bin/console calmfox:smtp:health --force  # check now rather than reusing a recent verdict
+bin/console calmfox:smtp:dns             # what the sender domain publishes, and whether it authorises the provider
 bin/console calmfox:smtp:test you@example.com
 bin/console calmfox:smtp:log:prune --days=7
 ```

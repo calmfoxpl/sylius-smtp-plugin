@@ -1,4 +1,11 @@
-{# Nothing at all while sending works. #}
+{#
+    Nothing at all while sending works.
+
+    Two notices, in two colours, and never merged: red means no mail is leaving the shop and
+    somebody has to act within the hour, amber means it is leaving and may not be arriving, which
+    is a different job for whoever looks after the domain. One colour for both would have an
+    administrator ignoring the pair inside a week.
+#}
 {% set warning = calmfox_smtp_warning() %}
 
 {% if warning is not null %}
@@ -6,6 +13,18 @@
         <h3 class="alert-title">{{ warning.headline }}</h3>
         <ul>
             {% for line in warning.lines %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+        <a href="{{ path('calmfox_smtp_health') }}">{{ 'calmfox_smtp.report.open_report'|trans }}</a>
+    </div>
+{% endif %}
+
+{% set deliverability = calmfox_smtp_deliverability() %}
+
+{% if deliverability is not null %}
+    <div class="alert alert-warning" role="alert">
+        <h3 class="alert-title">{{ deliverability.headline }}</h3>
+        <ul>
+            {% for line in deliverability.lines %}<li>{{ line }}</li>{% endfor %}
         </ul>
         <a href="{{ path('calmfox_smtp_health') }}">{{ 'calmfox_smtp.report.open_report'|trans }}</a>
     </div>

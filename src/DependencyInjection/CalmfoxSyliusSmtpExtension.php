@@ -22,6 +22,7 @@ final class CalmfoxSyliusSmtpExtension extends Extension implements PrependExten
         // precedence live in one readable method.
         $container->setParameter('calmfox_sylius_smtp.configuration', $config);
         $container->setParameter('calmfox_sylius_smtp.locked', $config['locked']);
+        $container->setParameter('calmfox_sylius_smtp.dns_enabled', $config['dns']['enabled']);
 
         (new YamlFileLoader($container, new FileLocator(__DIR__ . '/../../config')))->load('services.yaml');
     }

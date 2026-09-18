@@ -81,6 +81,11 @@ final class SettingsProvider
         ]);
     }
 
+    public function dnsCheckEnabled(): bool
+    {
+        return true === ($this->dns()['enabled'] ?? true);
+    }
+
     public function warnsInPanel(): bool
     {
         return true === $this->alerts()['panel'];
@@ -202,6 +207,12 @@ final class SettingsProvider
     private function health(): array
     {
         return \is_array($this->fileConfiguration['health'] ?? null) ? $this->fileConfiguration['health'] : [];
+    }
+
+    /** @return array<string, mixed> */
+    private function dns(): array
+    {
+        return \is_array($this->fileConfiguration['dns'] ?? null) ? $this->fileConfiguration['dns'] : [];
     }
 
     /** @return array<string, mixed> */

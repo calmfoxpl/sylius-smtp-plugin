@@ -103,6 +103,45 @@ final class Wording
         ]);
     }
 
+    /**
+     * The heading for the sender domain's records, kept deliberately apart from "cannot send".
+     *
+     * The distinction is the whole point of having it. Red means no mail is leaving the shop and
+     * somebody has to act within the hour. This means mail is leaving and may not be arriving,
+     * which is a different job, usually for whoever looks after the domain. Saying both in the
+     * same red box would rob the red one of its meaning within a week.
+     */
+    public function deliverabilityHeadline(?string $domain): string
+    {
+        if (null === $domain) {
+            return $this->say('deliverability.unknown_domain');
+        }
+
+        return $this->say('deliverability.headline', ['%domain%' => $domain]);
+    }
+
+    public function deliverabilityFine(?string $domain): string
+    {
+        if (null === $domain) {
+            return $this->say('deliverability.unknown_domain');
+        }
+
+        return $this->say('deliverability.fine', ['%domain%' => $domain]);
+    }
+
+    /** What the domain publishes, as a fact rather than a complaint. */
+    public function domainFact(string $what, ?bool $state): string
+    {
+        if (null === $state) {
+            return $this->say('domain.not_checked');
+        }
+        if ('spf_provider' === $what) {
+            return $this->say($state ? 'domain.authorises' : 'domain.does_not_authorise');
+        }
+
+        return $this->say($state ? 'domain.published' : 'domain.not_published');
+    }
+
     /** The sentence that says it is over, which is what earns the next warning a reading. */
     public function recovery(MailSettings $settings): string
     {

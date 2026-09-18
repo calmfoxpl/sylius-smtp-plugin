@@ -106,6 +106,38 @@
             </div>
         </div>
 
+        {% if domain.enabled %}
+            <div class="card mb-4 {{ domain.at_risk|default(false) ? 'border-warning' : '' }}">
+                <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.domain.title'|trans }}</h3></div>
+                <div class="card-body">
+                    <p class="{{ domain.at_risk|default(false) ? 'text-warning' : '' }}"><strong>{{ domain.headline }}</strong></p>
+
+                    {% if domain.facts|default({}) is not empty %}
+                        <dl class="row mb-0">
+                            {% for label, value in domain.facts %}
+                                <dt class="col-sm-4">{{ label }}</dt>
+                                <dd class="col-sm-8">{{ value }}</dd>
+                            {% endfor %}
+                        </dl>
+                    {% endif %}
+
+                    {% if domain.issues|default([]) is not empty %}
+                        <ul class="mt-3 mb-0">
+                            {% for issue in domain.issues %}
+                                <li class="{{ issue.severity == 'error' ? 'text-danger' : 'text-warning' }}">{{ issue.text }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div class="mt-3" data-calmfox-smtp-action data-url="{{ path('calmfox_smtp_dns') }}">
+                        <button type="button" class="btn btn-secondary" data-role="submit">{{ 'calmfox_smtp.report.domain.check_now'|trans }}</button>
+                        <p class="text-secondary mt-3 mb-0">{{ 'calmfox_smtp.report.domain.check_help'|trans }}</p>
+                        <div class="mt-3" data-role="result"></div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         {% if issues is not empty %}
             <div class="card mb-4">
                 <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.worth_fixing'|trans }}</h3></div>

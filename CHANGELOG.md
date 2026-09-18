@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- A check of what the sender domain publishes: SPF, DKIM and DMARC, read by
+  `calmfox:smtp:dns` and on a button in the panel, answering the one question a connection check
+  cannot — whether the domain authorises the provider the shop sends through. Nested records are
+  followed one level, as a receiver does; two records at once, a cost over the ten-lookup limit
+  and a `+all` are reported as the hard faults they are; DKIM is only judged where the provider
+  uses a selector that is the same for every customer.
+- A separate, amber notice for that on the dashboard, kept apart from the red "cannot send" one
+  so that neither teaches an administrator to ignore the other.
+- A suggestion from DNS while the settings are still empty: a submission service published under
+  RFC 6186, and the provider a domain's own SPF says it is set up for — offered as a question,
+  never filled in, and never carrying a credential.
+- `calmfox_sylius_smtp.dns.enabled` to turn the whole of it off.
+
 ### Fixed
 
 - The plugin's pages now sit inside the admin panel — side menu, top bar, the panel's own form

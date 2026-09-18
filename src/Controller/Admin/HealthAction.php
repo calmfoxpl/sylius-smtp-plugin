@@ -6,6 +6,7 @@ namespace Calmfox\SyliusSmtpPlugin\Controller\Admin;
 
 use Calmfox\SyliusSmtpPlugin\Core\Health\Status;
 use Calmfox\SyliusSmtpPlugin\Core\Provider\ProviderCatalog;
+use Calmfox\SyliusSmtpPlugin\Dns\DomainCheck;
 use Calmfox\SyliusSmtpPlugin\Health\Monitor;
 use Calmfox\SyliusSmtpPlugin\Settings\SettingsProvider;
 use Calmfox\SyliusSmtpPlugin\Text\Wording;
@@ -28,6 +29,7 @@ final readonly class HealthAction
 {
     public function __construct(
         private Monitor $monitor,
+        private DomainCheck $domains,
         private SettingsProvider $settings,
         private Wording $wording,
         private Environment $twig,
@@ -62,7 +64,61 @@ final readonly class HealthAction
             ),
             'channels' => $this->channels(),
             'test_recipient' => $this->settings->alertRecipient(),
+            'domain' => $this->domain(),
         ]));
+    }
+
+    /**
+     * What the sender domain publishes, as the page needs it.
+     *
+     * Only ever the stored answer: the resolver has no timeout worth the name, and a report page
+     * that hung for ten seconds to say an SPF record is wrong would be a worse fault than the
+     * one it is reporting.
+     *
+     * @return array<string, mixed>
+     */
+    private function domain(): array
+    {
+        if (!$this->domains->isEnabled()) {
+            return ['enabled' => false];
+        }
+
+        $verdict = $this->domains->stored();
+        if (null === $verdict) {
+            return ['enabled' => true, 'checked' => false, 'headline' => $this->wording->say('deliverability.never_checked')];
+        }
+
+        $facts = [];
+        if (null !== $verdict->domain) {
+            $facts[$this->wording->say('report.domain.sends_as')] = $verdict->domain;
+            $facts[$this->wording->say('report.domain.spf')] = $this->wording->domainFact('spf', $verdict->asked ? $verdict->spfFound : null);
+
+            if ($verdict->spfFound) {
+                $facts[$this->wording->say('report.domain.spf_provider')] = $this->wording->domainFact('spf_provider', $verdict->spfAuthorizesProvider);
+                $facts[$this->wording->say('report.domain.spf_cost')] = $this->wording->say('report.domain.lookups', ['%count%' => (string) $verdict->spfLookupCost]);
+            }
+
+            $facts[$this->wording->say('report.domain.dkim')] = $this->wording->domainFact('dkim', $verdict->dkimFound);
+            $facts[$this->wording->say('report.domain.dmarc')] = $verdict->dmarcPolicy ?? $this->wording->domainFact('dmarc', false);
+
+            if (null !== $verdict->otherSender) {
+                $facts[$this->wording->say('report.domain.also_authorised')] = $verdict->otherSender;
+            }
+        }
+
+        return [
+            'enabled' => true,
+            'checked' => true,
+            'at_risk' => $verdict->isDeliverabilityAtRisk(),
+            'headline' => $verdict->isDeliverabilityAtRisk()
+                ? $this->wording->deliverabilityHeadline($verdict->domain)
+                : $this->wording->deliverabilityFine($verdict->domain),
+            'facts' => $facts,
+            'issues' => array_map(
+                fn ($issue): array => ['severity' => $issue->severity, 'text' => $this->wording->issue($issue)],
+                $verdict->issues,
+            ),
+        ];
     }
 
     /**
