@@ -1,0 +1,135 @@
+{#
+    The report. Read top to bottom it answers: can the shop send, why not, what do I do about it,
+    who would have been told, and what is actually configured.
+
+    It extends the admin layout and writes its own body rather than going through twig hooks,
+    because it is one page with one shape and nothing on it is worth making replaceable.
+#}
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'calmfox_smtp.report.title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="page-header d-print-none mb-4">
+        <h2 class="page-title">{{ 'calmfox_smtp.report.title'|trans }}</h2>
+    </div>
+
+    {% if not enabled %}
+        <div class="alert alert-secondary">
+            <h3 class="alert-title">{{ 'calmfox_smtp.report.switched_off'|trans }}</h3>
+            <a href="{{ path('calmfox_smtp_settings') }}">{{ 'calmfox_smtp.report.open_settings'|trans }}</a>
+        </div>
+    {% else %}
+        <div class="alert alert-{{ modifier }}">
+            <div class="text-uppercase small">{{ status_label }}</div>
+            <h3 class="alert-title">{{ headline }}</h3>
+            <ul class="mb-0">
+                {% for line in explanation %}<li>{{ line }}</li>{% endfor %}
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.check_title'|trans }}</h3></div>
+                    <div class="card-body" data-calmfox-smtp-action data-url="{{ path('calmfox_smtp_health_check') }}">
+                        <button type="button" class="btn btn-secondary" data-role="submit">{{ 'calmfox_smtp.report.check_now'|trans }}</button>
+                        <p class="text-secondary mt-3 mb-0">{{ 'calmfox_smtp.report.check_help'|trans }}</p>
+                        <div class="mt-3" data-role="result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.test_title'|trans }}</h3></div>
+                    <div class="card-body" data-calmfox-smtp-action data-url="{{ path('calmfox_smtp_test') }}">
+                        <div class="input-group">
+                            <input type="email" class="form-control" data-role="recipient" value="{{ test_recipient }}"
+                                   placeholder="{{ 'calmfox_smtp.report.recipient_placeholder'|trans }}">
+                            <button type="button" class="btn btn-secondary" data-role="submit">{{ 'calmfox_smtp.report.send_it'|trans }}</button>
+                        </div>
+                        <p class="text-secondary mt-3 mb-0">{{ 'calmfox_smtp.report.test_help'|trans }}</p>
+                        <div class="mt-3" data-role="result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.configured'|trans }}</h3></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.provider'|trans }}</dt>
+                    <dd class="col-sm-8">{{ provider.isCustom ? 'calmfox_smtp.form.provider_custom'|trans : provider.label }}</dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.server'|trans }}</dt>
+                    <dd class="col-sm-8">{{ settings.host is empty ? 'calmfox_smtp.report.not_set'|trans : settings.endpoint }}</dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.encryption'|trans }}</dt>
+                    <dd class="col-sm-8">
+                        {% if settings.encryption == 'ssl' %}{{ 'calmfox_smtp.report.encryption_ssl'|trans }}
+                        {% elseif settings.encryption == 'tls' %}{{ 'calmfox_smtp.report.encryption_tls'|trans }}
+                        {% else %}{{ 'calmfox_smtp.report.encryption_none'|trans }}{% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.logs_in_as'|trans }}</dt>
+                    <dd class="col-sm-8">{{ settings.usesAuthentication ? settings.username : 'calmfox_smtp.report.no_login'|trans }}</dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.last_checked'|trans }}</dt>
+                    <dd class="col-sm-8">{{ state.checkedAt ? state.checkedAt|date('Y-m-d H:i') : 'calmfox_smtp.report.never'|trans }}</dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.last_worked'|trans }}</dt>
+                    <dd class="col-sm-8">{{ state.lastOkAt ? state.lastOkAt|date('Y-m-d H:i') : 'calmfox_smtp.report.never'|trans }}</dd>
+
+                    <dt class="col-sm-4">{{ 'calmfox_smtp.report.last_sent'|trans }}</dt>
+                    <dd class="col-sm-8">{{ state.lastSentAt ? state.lastSentAt|date('Y-m-d H:i') : 'calmfox_smtp.report.never'|trans }}</dd>
+
+                    {% if state.failingSince %}
+                        <dt class="col-sm-4">{{ 'calmfox_smtp.report.failing_since'|trans }}</dt>
+                        <dd class="col-sm-8">{{ state.failingSince|date('Y-m-d H:i') }}</dd>
+                    {% endif %}
+                    {% if state.consecutiveFailures > 0 %}
+                        <dt class="col-sm-4">{{ 'calmfox_smtp.report.failed_checks'|trans }}</dt>
+                        <dd class="col-sm-8">{{ state.consecutiveFailures }}</dd>
+                    {% endif %}
+                    {% if state.sendFailures > 0 %}
+                        <dt class="col-sm-4">{{ 'calmfox_smtp.report.failed_messages'|trans }}</dt>
+                        <dd class="col-sm-8">{{ state.sendFailures }}</dd>
+                    {% endif %}
+                </dl>
+                <div class="mt-3">
+                    <a href="{{ path('calmfox_smtp_settings') }}">{{ 'calmfox_smtp.report.change_settings'|trans }}</a>
+                    &nbsp;·&nbsp;
+                    <a href="{{ path('calmfox_smtp_log') }}">{{ 'calmfox_smtp.report.see_messages'|trans }}</a>
+                </div>
+            </div>
+        </div>
+
+        {% if issues is not empty %}
+            <div class="card mb-4">
+                <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.worth_fixing'|trans }}</h3></div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for issue in issues %}
+                            <li class="{{ issue.severity == 'error' ? 'text-danger' : 'text-warning' }}">{{ issue.text }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.report.who_is_told'|trans }}</h3></div>
+            <div class="card-body">
+                <ul>{% for channel in channels %}<li>{{ channel }}</li>{% endfor %}</ul>
+                <p class="text-secondary mb-0">{{ 'calmfox_smtp.report.how_often_told'|trans }}</p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% include '@CalmfoxSyliusSmtpPlugin/admin/_actions_script.html.twig' %}
+{% endblock %}

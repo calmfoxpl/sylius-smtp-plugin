@@ -1,0 +1,46 @@
+# Three pages and three actions, all behind the admin firewall by living under its prefix.
+calmfox_smtp_health:
+    path: /smtp
+    methods: [GET]
+    defaults:
+        _controller: calmfox_smtp.controller.health
+
+calmfox_smtp_health_check:
+    path: /smtp/check
+    methods: [POST]
+    defaults:
+        _controller: calmfox_smtp.controller.check
+
+calmfox_smtp_test:
+    path: /smtp/test
+    methods: [POST]
+    defaults:
+        _controller: calmfox_smtp.controller.test
+
+calmfox_smtp_settings:
+    path: /smtp/settings
+    methods: [GET, POST]
+    defaults:
+        _controller: calmfox_smtp.controller.settings
+
+calmfox_smtp_log:
+    path: /smtp/messages
+    methods: [GET]
+    defaults:
+        _controller: calmfox_smtp.controller.log
+
+calmfox_smtp_log_show:
+    path: /smtp/messages/{id}
+    methods: [GET]
+    requirements:
+        id: \d+
+    defaults:
+        _controller: calmfox_smtp.controller.log_show
+
+calmfox_smtp_log_resend:
+    path: /smtp/messages/{id}/resend
+    methods: [POST]
+    requirements:
+        id: \d+
+    defaults:
+        _controller: calmfox_smtp.controller.log_resend

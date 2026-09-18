@@ -1,0 +1,52 @@
+{#
+    The two buttons on the report: check the connection, send a test message.
+
+    Plain fetch and plain DOM, with no build step and no dependency on the admin's own bundles —
+    a plugin that needed a compiled asset to show a button would be a plugin that breaks on the
+    day somebody upgrades their build tooling. The answer is written into the page rather than
+    into a toast because it is several sentences long and gets read next to the fields it is about.
+#}
+<script>
+    document.querySelectorAll('[data-calmfox-smtp-action]').forEach(function (container) {
+        var button = container.querySelector('[data-role="submit"]');
+        var result = container.querySelector('[data-role="result"]');
+        var recipient = container.querySelector('[data-role="recipient"]');
+
+        if (!button || !result) {
+            return;
+        }
+
+        button.addEventListener('click', function () {
+            var body = new FormData();
+
+            if (recipient && recipient.value) {
+                body.append('recipient', recipient.value);
+            }
+
+            button.disabled = true;
+            result.textContent = {{ 'calmfox_smtp.report.working'|trans|json_encode|raw }};
+
+            fetch(container.dataset.url, { method: 'POST', body: body, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (response) { return response.json(); })
+                .then(function (payload) {
+                    result.innerHTML = '';
+                    var headline = document.createElement('strong');
+                    headline.className = payload.ok ? 'text-success' : 'text-danger';
+                    headline.textContent = payload.headline || '';
+                    result.appendChild(headline);
+                    var list = document.createElement('ul');
+                    list.className = 'mb-0 mt-2';
+                    (payload.lines || []).forEach(function (line) {
+                        var item = document.createElement('li');
+                        item.textContent = line;
+                        list.appendChild(item);
+                    });
+                    result.appendChild(list);
+                })
+                .catch(function () {
+                    result.textContent = {{ 'calmfox_smtp.report.could_not_ask'|trans|json_encode|raw }};
+                })
+                .finally(function () { button.disabled = false; });
+        });
+    });
+</script>

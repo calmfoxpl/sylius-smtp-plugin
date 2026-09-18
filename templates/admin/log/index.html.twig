@@ -1,0 +1,92 @@
+{#
+    What the shop tried to send, newest first, with the two filters people actually arrive with:
+    "did this address get anything?" and "what failed today?".
+#}
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'calmfox_smtp.log.title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="page-header d-print-none mb-4">
+        <h2 class="page-title">{{ 'calmfox_smtp.log.title'|trans }}</h2>
+        <div class="text-secondary">{{ 'calmfox_smtp.log.retention'|trans({ '%days%': retention_days }) }}</div>
+    </div>
+
+    {% if not log_enabled %}
+        <div class="alert alert-secondary">{{ 'calmfox_smtp.log.switched_off'|trans }}</div>
+    {% endif %}
+
+    <form method="get" class="card mb-4">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label" for="calmfox-smtp-search">{{ 'calmfox_smtp.log.search'|trans }}</label>
+                <input type="search" id="calmfox-smtp-search" name="q" value="{{ search }}" class="form-control"
+                       placeholder="{{ 'calmfox_smtp.log.search_placeholder'|trans }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="calmfox-smtp-outcome">{{ 'calmfox_smtp.log.outcome'|trans }}</label>
+                <select id="calmfox-smtp-outcome" name="outcome" class="form-select">
+                    <option value="">{{ 'calmfox_smtp.log.any_outcome'|trans }}</option>
+                    <option value="sent" {{ outcome == 'sent' ? 'selected' : '' }}>{{ 'calmfox_smtp.log.outcome_sent'|trans }}</option>
+                    <option value="failed" {{ outcome == 'failed' ? 'selected' : '' }}>{{ 'calmfox_smtp.log.outcome_failed'|trans }}</option>
+                    <option value="suppressed" {{ outcome == 'suppressed' ? 'selected' : '' }}>{{ 'calmfox_smtp.log.outcome_suppressed'|trans }}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-secondary w-100">{{ 'calmfox_smtp.log.filter'|trans }}</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>{{ 'calmfox_smtp.log.sent_at'|trans }}</th>
+                        <th>{{ 'calmfox_smtp.log.outcome'|trans }}</th>
+                        <th>{{ 'calmfox_smtp.log.to'|trans }}</th>
+                        <th>{{ 'calmfox_smtp.log.subject'|trans }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for entry in page.entries %}
+                    <tr>
+                        <td class="text-nowrap">{{ entry.sentAt|date('Y-m-d H:i') }}</td>
+                        <td>
+                            {% if entry.outcome == 'sent' %}
+                                <span class="text-success">{{ 'calmfox_smtp.log.outcome_sent'|trans }}</span>
+                            {% elseif entry.outcome == 'suppressed' %}
+                                <span class="text-secondary">{{ 'calmfox_smtp.log.outcome_suppressed'|trans }}</span>
+                            {% else %}
+                                <span class="text-danger">{{ 'calmfox_smtp.log.outcome_failed'|trans }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ entry.recipients }}</td>
+                        <td>{{ entry.subject }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('calmfox_smtp_log_show', { id: entry.id }) }}">{{ 'calmfox_smtp.log.open'|trans }}</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-secondary">{{ 'calmfox_smtp.log.nothing'|trans }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page.pages > 1 %}
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-secondary">{{ 'calmfox_smtp.log.counted'|trans({ '%total%': page.total }) }}</p>
+                <ul class="pagination m-0 ms-auto">
+                    {% for number in 1..page.pages %}
+                        <li class="page-item {{ number == page.page ? 'active' : '' }}">
+                            <a class="page-link" href="{{ path('calmfox_smtp_log', { page: number, outcome: outcome, q: search }) }}">{{ number }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

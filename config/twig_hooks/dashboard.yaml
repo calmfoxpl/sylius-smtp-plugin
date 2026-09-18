@@ -1,0 +1,8 @@
+# The warning on the dashboard, which renders nothing at all while sending works — a panel that
+# reports good news in six places is a panel nobody reads.
+sylius_twig_hooks:
+    hooks:
+        'sylius_admin.dashboard.index.content':
+            calmfox_smtp_warning:
+                template: '@CalmfoxSyliusSmtpPlugin/admin/dashboard_warning.html.twig'
+                priority: 500

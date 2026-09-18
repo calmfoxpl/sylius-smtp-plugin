@@ -1,0 +1,8 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        # The framework-free core is covered by its own unit tests and has no framework types to
+        # analyse against; keeping it in would only mean arguing with the analyser about arrays.
+        - src/Core

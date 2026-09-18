@@ -1,0 +1,109 @@
+{#
+    Fills in the server fields when a provider is picked, and explains what that provider means by
+    its two credential fields.
+
+    Two rules, both about not being clever at somebody else's expense: on page load nothing is
+    written, because the saved settings are the saved settings even where they disagree with the
+    preset; and a login the provider insists on is filled in and locked in front of the person
+    typing, rather than corrected silently after they save.
+#}
+<script>
+    (function () {
+        var help = document.querySelector('[data-role="provider-help"]');
+        var provider = document.querySelector('[data-role="provider"]');
+
+        if (!help || !provider) {
+            return;
+        }
+
+        var presets = JSON.parse(help.dataset.presets || '{}');
+        var field = function (role) { return document.querySelector('[data-role="' + role + '"]'); };
+
+        var fill = function (role, value) {
+            var input = field(role);
+            if (input && !input.disabled && value !== null && value !== undefined && value !== '') {
+                input.value = value;
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        };
+
+        var describe = function (preset) {
+            var hints = help.querySelector('[data-role="hints"]');
+            var hosts = help.querySelector('[data-role="hosts"]');
+            var docs = help.querySelector('[data-role="docs"]');
+
+            hints.innerHTML = '';
+            hosts.innerHTML = '';
+            docs.innerHTML = '';
+
+            if (!preset) {
+                help.hidden = true;
+                return;
+            }
+
+            help.hidden = false;
+            (preset.hints || []).forEach(function (hint) {
+                var item = document.createElement('li');
+                item.textContent = hint;
+                hints.appendChild(item);
+            });
+
+            Object.keys(preset.hostVariants || {}).forEach(function (region, index) {
+                if (index === 0) {
+                    hosts.appendChild(document.createTextNode({{ 'calmfox_smtp.settings.other_hosts'|trans|json_encode|raw }} + ' '));
+                } else {
+                    hosts.appendChild(document.createTextNode(', '));
+                }
+                var link = document.createElement('a');
+                link.href = '#';
+                link.textContent = region;
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    fill('host', preset.hostVariants[region]);
+                });
+                hosts.appendChild(link);
+            });
+
+            if (preset.docsUrl) {
+                var link = document.createElement('a');
+                link.href = preset.docsUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = {{ 'calmfox_smtp.settings.provider_docs'|trans|json_encode|raw }};
+                docs.appendChild(link);
+            }
+        };
+
+        var pin = function (preset) {
+            var username = field('username');
+            if (!username) {
+                return;
+            }
+            if (preset && preset.pinnedUsername) {
+                fill('username', preset.pinnedUsername);
+                username.readOnly = true;
+            } else {
+                username.readOnly = false;
+            }
+        };
+
+        describe(presets[provider.value]);
+        pin(presets[provider.value]);
+
+        provider.addEventListener('change', function () {
+            var preset = presets[provider.value];
+
+            describe(preset);
+            pin(preset);
+
+            if (!preset || !preset.host) {
+                return;
+            }
+
+            fill('host', preset.host);
+            fill('port', preset.port);
+            fill('encryption', preset.encryption);
+            fill('auth', preset.auth);
+        });
+    })();
+</script>

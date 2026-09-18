@@ -1,0 +1,103 @@
+{#
+    Configuration → E-mail sending. Pick a provider, paste the two credentials, save.
+
+    The help panel under the provider list is the part that earns its keep: every provider means
+    something different by "user name", and the difference is guessable at none of them.
+#}
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'calmfox_smtp.settings.title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="page-header d-print-none mb-4">
+        <h2 class="page-title">{{ 'calmfox_smtp.settings.title'|trans }}</h2>
+    </div>
+
+    {% if locked %}
+        <div class="alert alert-info">
+            <h3 class="alert-title">{{ 'calmfox_smtp.settings.locked'|trans }}</h3>
+            <p class="mb-0">{{ 'calmfox_smtp.settings.locked_help'|trans }}</p>
+        </div>
+    {% endif %}
+
+    {% if issues is not empty %}
+        <div class="alert alert-warning">
+            <ul class="mb-0">
+                {% for issue in issues %}
+                    <li class="{{ issue.severity == 'error' ? 'text-danger' : '' }}">{{ issue.text }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {{ form_start(form, { attr: { 'data-calmfox-smtp-form': 'true' } }) }}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.sending'|trans }}</h3></div>
+            <div class="card-body">
+                {{ form_row(form.enabled, { attr: { disabled: locked } }) }}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.server'|trans }}</h3></div>
+            <div class="card-body">
+                {{ form_row(form.provider, { attr: { disabled: locked, 'data-role': 'provider' } }) }}
+
+                <div class="alert alert-secondary" data-role="provider-help"
+                     data-presets="{{ presets|json_encode|e('html_attr') }}">
+                    <ul class="mb-0" data-role="hints"></ul>
+                    <p class="mb-0 mt-2" data-role="hosts"></p>
+                    <p class="mb-0 mt-2" data-role="docs"></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">{{ form_row(form.host, { attr: { disabled: locked, 'data-role': 'host' } }) }}</div>
+                    <div class="col-md-4">{{ form_row(form.port, { attr: { disabled: locked, 'data-role': 'port' } }) }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.encryption, { attr: { disabled: locked, 'data-role': 'encryption' } }) }}</div>
+                    <div class="col-md-6">{{ form_row(form.auth, { attr: { disabled: locked, 'data-role': 'auth' } }) }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.username, { attr: { disabled: locked, 'data-role': 'username' } }) }}</div>
+                    <div class="col-md-6">{{ form_row(form.plainPassword, { attr: { disabled: locked } }) }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">{{ form_row(form.timeout, { attr: { disabled: locked } }) }}</div>
+                    <div class="col-md-6">{{ form_row(form.verifyCertificate, { attr: { disabled: locked } }) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.sender'|trans }}</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">{{ 'calmfox_smtp.settings.sender_help'|trans }}</p>
+                {{ form_row(form.fromEmail, { attr: { disabled: locked } }) }}
+                {{ form_row(form.fromName, { attr: { disabled: locked } }) }}
+                {{ form_row(form.returnPath, { attr: { disabled: locked } }) }}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.settings.alerts'|trans }}</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">{{ 'calmfox_smtp.settings.alerts_help'|trans }}</p>
+                {{ form_row(form.alertRecipient, { attr: { disabled: locked } }) }}
+                {{ form_row(form.webhookUrl, { attr: { disabled: locked } }) }}
+            </div>
+        </div>
+
+        {% if not locked %}
+            <div class="mb-4">
+                <button type="submit" class="btn btn-primary">{{ 'sylius.ui.save_changes'|trans }}</button>
+                <a href="{{ path('calmfox_smtp_health') }}" class="btn btn-link">{{ 'calmfox_smtp.settings.to_report'|trans }}</a>
+            </div>
+        {% endif %}
+    {{ form_end(form) }}
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% include '@CalmfoxSyliusSmtpPlugin/admin/_presets_script.html.twig' %}
+{% endblock %}

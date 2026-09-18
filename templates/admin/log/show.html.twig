@@ -1,0 +1,79 @@
+{#
+    One message in full. For the conversation that starts "the customer says they never got it".
+
+    The body is shown as source rather than rendered: this page is for finding out what happened,
+    and rendering somebody else's HTML inside an admin panel is a habit worth not having.
+#}
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ 'calmfox_smtp.log.one_title'|trans }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="page-header d-print-none mb-4">
+        <h2 class="page-title">{{ 'calmfox_smtp.log.one_title'|trans }}</h2>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.sent_at'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.sentAt|date('Y-m-d H:i:s') }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.outcome'|trans }}</dt>
+                <dd class="col-sm-9">
+                    {% if entry.outcome == 'sent' %}{{ 'calmfox_smtp.log.outcome_sent'|trans }}
+                    {% elseif entry.outcome == 'suppressed' %}{{ 'calmfox_smtp.log.outcome_suppressed'|trans }}
+                    {% else %}{{ 'calmfox_smtp.log.outcome_failed'|trans }}{% endif %}
+                </dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.from'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.fromAddress }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.to'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.envelopeRecipients is not empty ? entry.envelopeRecipients|join(', ') : entry.recipients }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.subject'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.subject }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.through'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.endpoint }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.size'|trans }}</dt>
+                <dd class="col-sm-9">{{ 'calmfox_smtp.log.bytes'|trans({ '%count%': entry.messageSize }) }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.took'|trans }}</dt>
+                <dd class="col-sm-9">{{ 'calmfox_smtp.log.ms'|trans({ '%count%': entry.durationMs }) }}</dd>
+
+                <dt class="col-sm-3">{{ 'calmfox_smtp.log.attempts'|trans }}</dt>
+                <dd class="col-sm-9">{{ entry.attempts }}{% if entry.resentAt %} · {{ entry.resentAt|date('Y-m-d H:i') }}{% endif %}</dd>
+            </dl>
+        </div>
+    </div>
+
+    {% if failure_lines is not empty %}
+        <div class="card mb-4 border-danger">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.log.why_not'|trans }}</h3></div>
+            <div class="card-body">
+                <ul>{% for line in failure_lines %}<li>{{ line }}</li>{% endfor %}</ul>
+                {% if resend_note %}<p class="text-secondary">{{ resend_note }}</p>{% endif %}
+                {% if can_resend %}
+                    <form method="post" action="{{ path('calmfox_smtp_log_resend', { id: entry.id }) }}">
+                        <button type="submit" class="btn btn-primary">{{ 'calmfox_smtp.log.resend'|trans }}</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if entry.rawMessage %}
+        <div class="card mb-4">
+            <div class="card-header"><h3 class="card-title">{{ 'calmfox_smtp.log.source_title'|trans }}</h3></div>
+            <div class="card-body">
+                <p class="text-secondary">{{ 'calmfox_smtp.log.source_help'|trans }}</p>
+                <pre class="bg-light p-3" style="max-height: 40rem; overflow: auto; white-space: pre-wrap;">{{ entry.rawMessage }}</pre>
+            </div>
+        </div>
+    {% endif %}
+
+    <a href="{{ path('calmfox_smtp_log') }}">{{ 'calmfox_smtp.log.back'|trans }}</a>
+{% endblock %}

@@ -1,0 +1,277 @@
+# Explicit definitions rather than autowiring, so that what depends on what can be read here.
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: false
+        public: false
+
+    # ── settings: the file, then the panel ────────────────────────────────────
+    calmfox_smtp.settings.secret:
+        class: Calmfox\SyliusSmtpPlugin\Settings\Secret
+        arguments:
+            $applicationSecret: '%kernel.secret%'
+
+    calmfox_smtp.settings.repository:
+        class: Calmfox\SyliusSmtpPlugin\Settings\SettingsRepository
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.settings.provider:
+        class: Calmfox\SyliusSmtpPlugin\Settings\SettingsProvider
+        arguments:
+            $fileConfiguration: '%calmfox_sylius_smtp.configuration%'
+            $repository: '@calmfox_smtp.settings.repository'
+            $secret: '@calmfox_smtp.settings.secret'
+
+    calmfox_smtp.settings.shop_name:
+        class: Calmfox\SyliusSmtpPlugin\Settings\ShopName
+        arguments:
+            $channels: '@sylius.repository.channel'
+
+    # ── the words ────────────────────────────────────────────────────────────
+    calmfox_smtp.wording:
+        class: Calmfox\SyliusSmtpPlugin\Text\Wording
+        arguments:
+            $translator: '@translator'
+
+    # ── the check ────────────────────────────────────────────────────────────
+    calmfox_smtp.probe.dialogue:
+        class: Calmfox\SyliusSmtpPlugin\Core\Probe\SmtpDialogue
+
+    calmfox_smtp.probe:
+        class: Calmfox\SyliusSmtpPlugin\Probe\SmtpProbe
+        arguments:
+            $dialogue: '@calmfox_smtp.probe.dialogue'
+
+    calmfox_smtp.health.store:
+        class: Calmfox\SyliusSmtpPlugin\Health\HealthStore
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.health.monitor:
+        class: Calmfox\SyliusSmtpPlugin\Health\Monitor
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $probe: '@calmfox_smtp.probe'
+            $store: '@calmfox_smtp.health.store'
+            $notifier: '@calmfox_smtp.alert.notifier'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    # ── who is told ──────────────────────────────────────────────────────────
+    calmfox_smtp.alert.email:
+        class: Calmfox\SyliusSmtpPlugin\Alert\EmailChannel
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+            $logger: '@logger'
+            $shopName: '@calmfox_smtp.settings.shop_name'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    # An HTTP client of its own, so a timeout set for a chat room cannot leak into the shop's
+    # other outgoing calls.
+    calmfox_smtp.alert.http_client:
+        class: Symfony\Contracts\HttpClient\HttpClientInterface
+        factory: ['Symfony\Component\HttpClient\HttpClient', 'create']
+        arguments:
+            - { max_redirects: 0 }
+
+    calmfox_smtp.alert.webhook:
+        class: Calmfox\SyliusSmtpPlugin\Alert\WebhookChannel
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+            $httpClient: '@calmfox_smtp.alert.http_client'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.alert.notifier:
+        class: Calmfox\SyliusSmtpPlugin\Alert\Notifier
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+            $email: '@calmfox_smtp.alert.email'
+            $webhook: '@calmfox_smtp.alert.webhook'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    # ── the log ──────────────────────────────────────────────────────────────
+    calmfox_smtp.log.writer:
+        class: Calmfox\SyliusSmtpPlugin\Log\Writer
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.log.repository:
+        class: Calmfox\SyliusSmtpPlugin\Log\LogRepository
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+
+    calmfox_smtp.log.pruner:
+        class: Calmfox\SyliusSmtpPlugin\Log\Pruner
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $settings: '@calmfox_smtp.settings.provider'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.log.resender:
+        class: Calmfox\SyliusSmtpPlugin\Log\Resender
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $builder: '@calmfox_smtp.mailer.transport_builder'
+            $writer: '@calmfox_smtp.log.writer'
+            $monitor: '@calmfox_smtp.health.monitor'
+            $wording: '@calmfox_smtp.wording'
+
+    # ── the transport in front of the application's own ──────────────────────
+    calmfox_smtp.mailer.transport_builder:
+        class: Calmfox\SyliusSmtpPlugin\Mailer\TransportBuilder
+
+    calmfox_smtp.mailer.transport:
+        class: Calmfox\SyliusSmtpPlugin\Mailer\WatchingTransport
+        decorates: mailer.default_transport
+        arguments:
+            $inner: '@.inner'
+            $settings: '@calmfox_smtp.settings.provider'
+            $builder: '@calmfox_smtp.mailer.transport_builder'
+            $writer: '@calmfox_smtp.log.writer'
+            $monitor: '@calmfox_smtp.health.monitor'
+            $logger: '@logger'
+        tags:
+            - { name: monolog.logger, channel: mailer }
+
+    calmfox_smtp.mailer.test_sender:
+        class: Calmfox\SyliusSmtpPlugin\Mailer\TestSender
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $builder: '@calmfox_smtp.mailer.transport_builder'
+            $writer: '@calmfox_smtp.log.writer'
+            $monitor: '@calmfox_smtp.health.monitor'
+            $wording: '@calmfox_smtp.wording'
+
+    # ── the panel ────────────────────────────────────────────────────────────
+    calmfox_smtp.form.type.settings:
+        class: Calmfox\SyliusSmtpPlugin\Form\Type\SmtpSettingsType
+        tags: ['form.type']
+
+    calmfox_smtp.controller.settings:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\SettingsAction
+        public: true
+        arguments:
+            $settings: '@calmfox_smtp.settings.provider'
+            $repository: '@calmfox_smtp.settings.repository'
+            $wording: '@calmfox_smtp.wording'
+            $formFactory: '@form.factory'
+            $urlGenerator: '@router'
+            $twig: '@twig'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.health:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\HealthAction
+        public: true
+        arguments:
+            $monitor: '@calmfox_smtp.health.monitor'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+            $twig: '@twig'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.check:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\CheckAction
+        public: true
+        arguments:
+            $monitor: '@calmfox_smtp.health.monitor'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.test:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\TestAction
+        public: true
+        arguments:
+            $sender: '@calmfox_smtp.mailer.test_sender'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.log:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\LogAction
+        public: true
+        arguments:
+            $entries: '@calmfox_smtp.log.repository'
+            $settings: '@calmfox_smtp.settings.provider'
+            $twig: '@twig'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.log_show:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\LogShowAction
+        public: true
+        arguments:
+            $entries: '@calmfox_smtp.log.repository'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+            $urlGenerator: '@router'
+            $twig: '@twig'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.controller.log_resend:
+        class: Calmfox\SyliusSmtpPlugin\Controller\Admin\LogResendAction
+        public: true
+        arguments:
+            $entries: '@calmfox_smtp.log.repository'
+            $resender: '@calmfox_smtp.log.resender'
+            $urlGenerator: '@router'
+        tags: ['controller.service_arguments']
+
+    calmfox_smtp.menu_listener:
+        class: Calmfox\SyliusSmtpPlugin\Menu\AdminMenuListener
+        arguments:
+            $store: '@calmfox_smtp.health.store'
+            $settings: '@calmfox_smtp.settings.provider'
+        tags:
+            - { name: kernel.event_listener, event: sylius.menu.admin.main }
+
+    calmfox_smtp.twig_extension:
+        class: Calmfox\SyliusSmtpPlugin\Twig\HealthExtension
+        arguments:
+            $store: '@calmfox_smtp.health.store'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['twig.extension']
+
+    # ── the console, which is also how the check becomes periodic ────────────
+    calmfox_smtp.command.health:
+        class: Calmfox\SyliusSmtpPlugin\Command\HealthCommand
+        arguments:
+            $monitor: '@calmfox_smtp.health.monitor'
+            $settings: '@calmfox_smtp.settings.provider'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['console.command']
+
+    calmfox_smtp.command.test:
+        class: Calmfox\SyliusSmtpPlugin\Command\TestCommand
+        arguments:
+            $sender: '@calmfox_smtp.mailer.test_sender'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['console.command']
+
+    calmfox_smtp.command.prune_log:
+        class: Calmfox\SyliusSmtpPlugin\Command\PruneLogCommand
+        arguments:
+            $pruner: '@calmfox_smtp.log.pruner'
+            $wording: '@calmfox_smtp.wording'
+        tags: ['console.command']

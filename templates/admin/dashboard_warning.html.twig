@@ -1,0 +1,12 @@
+{# Nothing at all while sending works. #}
+{% set warning = calmfox_smtp_warning() %}
+
+{% if warning is not null %}
+    <div class="alert alert-danger" role="alert">
+        <h3 class="alert-title">{{ warning.headline }}</h3>
+        <ul>
+            {% for line in warning.lines %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+        <a href="{{ path('calmfox_smtp_health') }}">{{ 'calmfox_smtp.report.open_report'|trans }}</a>
+    </div>
+{% endif %}

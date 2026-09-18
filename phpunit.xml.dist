@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The unit suite covers the framework-free core and the files that have to agree with it: the
+    provider presets, the SMTP conversation, the reading it gives a shopkeeper, the decision to
+    warn, and the two translation files. It needs neither Sylius nor a mail server:
+
+        vendor/bin/phpunit -c phpunit.xml.dist
+-->
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    bootstrap="tests/bootstrap.php"
+    cacheDirectory=".phpunit.cache"
+    colors="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    beStrictAboutOutputDuringTests="true"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+
+    <php>
+        <ini name="error_reporting" value="-1"/>
+        <env name="APP_ENV" value="test" force="true"/>
+        <env name="SHELL_VERBOSITY" value="-1"/>
+    </php>
+</phpunit>
