@@ -159,7 +159,9 @@ final class SettingsProvider
             'provider' => self::pick($stored?->getProvider(), $server['provider'] ?? null, 'custom'),
             'host' => self::pick($stored?->getHost(), $server['host'] ?? null),
             'port' => self::pick($stored?->getPort(), $server['port'] ?? null),
-            'encryption' => self::pick($stored?->getEncryption(), $server['encryption'] ?? null, 'tls'),
+            // Not pick(): "no encryption" is the empty string, which pick() would take for a field
+            // nobody filled in and quietly turn back into STARTTLS.
+            'encryption' => null !== $stored ? $stored->getEncryption() : (string) ($server['encryption'] ?? 'tls'),
             'auth' => self::pick($stored?->getAuth(), $server['auth'] ?? null, 'auto'),
             'username' => self::pick($stored?->getUsername(), $server['username'] ?? null),
             'password' => $this->password($server['password'] ?? null, $stored),

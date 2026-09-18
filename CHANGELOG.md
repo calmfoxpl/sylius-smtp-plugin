@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Fixed
+
+- The plugin's pages now sit inside the admin panel — side menu, top bar, the panel's own form
+  styling and flash messages. Sylius 2's base layout has none of these, so the pages rendered
+  bare, with no way back to the rest of the panel.
+- "No encryption" chosen in the panel, or set in the file, is no longer quietly turned back into
+  STARTTLS. The empty string that stands for it was being read as a field nobody had filled in,
+  which made a local relay on port 25 or a development mail catcher impossible to use.
+
+### Changed
+
+- The installation steps now include importing the plugin's configuration, without which the
+  warning on the dashboard is never shown.
+
 ## [1.0.0] - 2026-09-18
 
 ### Added

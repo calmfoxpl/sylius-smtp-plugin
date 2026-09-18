@@ -4,11 +4,13 @@
     The help panel under the provider list is the part that earns its keep: every provider means
     something different by "user name", and the difference is guessable at none of them.
 #}
-{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+{% extends '@CalmfoxSyliusSmtpPlugin/admin/layout.html.twig' %}
 
 {% block title %}{{ 'calmfox_smtp.settings.title'|trans }} | {{ parent() }}{% endblock %}
 
-{% block body %}
+{% block content %}
+    {% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
+
     <div class="page-header d-print-none mb-4">
         <h2 class="page-title">{{ 'calmfox_smtp.settings.title'|trans }}</h2>
     </div>

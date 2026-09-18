@@ -94,6 +94,14 @@ Register the plugin in `config/bundles.php`:
 Calmfox\SyliusSmtpPlugin\CalmfoxSyliusSmtpPlugin::class => ['all' => true],
 ```
 
+Import its configuration — this is what puts the warning on the dashboard — in
+`config/packages/calmfox_sylius_smtp.yaml`:
+
+```yaml
+imports:
+    - { resource: '@CalmfoxSyliusSmtpPlugin/config/config.yaml' }
+```
+
 Import its routes, under the admin prefix so its pages are behind the admin firewall — in
 `config/routes/calmfox_smtp.yaml`:
 

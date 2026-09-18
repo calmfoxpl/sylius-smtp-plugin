@@ -4,11 +4,11 @@
     The body is shown as source rather than rendered: this page is for finding out what happened,
     and rendering somebody else's HTML inside an admin panel is a habit worth not having.
 #}
-{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+{% extends '@CalmfoxSyliusSmtpPlugin/admin/layout.html.twig' %}
 
 {% block title %}{{ 'calmfox_smtp.log.one_title'|trans }} | {{ parent() }}{% endblock %}
 
-{% block body %}
+{% block content %}
     <div class="page-header d-print-none mb-4">
         <h2 class="page-title">{{ 'calmfox_smtp.log.one_title'|trans }}</h2>
     </div>

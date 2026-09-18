@@ -2,14 +2,14 @@
     The report. Read top to bottom it answers: can the shop send, why not, what do I do about it,
     who would have been told, and what is actually configured.
 
-    It extends the admin layout and writes its own body rather than going through twig hooks,
+    It sits in the plugin's frame and writes its own body rather than going through twig hooks,
     because it is one page with one shape and nothing on it is worth making replaceable.
 #}
-{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+{% extends '@CalmfoxSyliusSmtpPlugin/admin/layout.html.twig' %}
 
 {% block title %}{{ 'calmfox_smtp.report.title'|trans }} | {{ parent() }}{% endblock %}
 
-{% block body %}
+{% block content %}
     <div class="page-header d-print-none mb-4">
         <h2 class="page-title">{{ 'calmfox_smtp.report.title'|trans }}</h2>
     </div>
