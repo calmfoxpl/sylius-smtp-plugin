@@ -9,9 +9,8 @@ use Calmfox\SyliusSmtpPlugin\Core\Dns\DomainVerdict;
 use Calmfox\SyliusSmtpPlugin\Core\Dns\SenderDomain;
 use Calmfox\SyliusSmtpPlugin\Core\Dns\Suggestion;
 use Calmfox\SyliusSmtpPlugin\Settings\SettingsProvider;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * The domain check as the rest of the plugin sees it, with the one rule that matters: only
@@ -34,7 +33,7 @@ final class DomainCheck
     public function __construct(
         private readonly SettingsProvider $settings,
         private readonly DomainInspector $inspector,
-        private readonly CacheInterface $cache,
+        private readonly CacheItemPoolInterface $cache,
         private readonly LoggerInterface $logger,
         private readonly bool $enabled,
     ) {
@@ -48,7 +47,15 @@ final class DomainCheck
         }
 
         try {
-            $row = $this->cache->get($this->key(), static fn (): ?array => null);
+            // A PSR-6 pool rather than the callback cache on purpose: reading must not write.
+            // The callback form would store an empty entry on every admin page that renders,
+            // which is a cache write per page view to answer "nothing has been checked yet".
+            $item = $this->cache->getItem($this->key());
+            if (!$item->isHit()) {
+                return null;
+            }
+
+            $row = $item->get();
 
             return \is_array($row) ? DomainVerdict::fromArray($row) : null;
         } catch (\Throwable $error) {
@@ -68,12 +75,10 @@ final class DomainCheck
         $verdict = $this->inspector->inspect($this->settings->resolve()->settings);
 
         try {
-            $this->cache->delete($this->key());
-            $this->cache->get($this->key(), static function (ItemInterface $item) use ($verdict): array {
-                $item->expiresAfter(self::LIFETIME);
-
-                return $verdict->toArray();
-            });
+            $item = $this->cache->getItem($this->key());
+            $item->set($verdict->toArray());
+            $item->expiresAfter(self::LIFETIME);
+            $this->cache->save($item);
         } catch (\Throwable $error) {
             $this->logger->warning('Calmfox SMTP: the domain verdict could not be stored.', ['exception' => $error]);
         }

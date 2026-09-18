@@ -42,22 +42,30 @@ final readonly class DnsAction
         }
 
         $verdict = $this->domains->refresh();
-        $lines = [];
+        if (null === $verdict) {
+            // Only reachable if the switch was turned off between the two calls above.
+            return new JsonResponse([
+                'ok' => false,
+                'headline' => $this->wording->say('dns.switched_off'),
+                'lines' => [],
+            ]);
+        }
 
-        foreach ($verdict?->issues ?? [] as $issue) {
+        $lines = [];
+        foreach ($verdict->issues as $issue) {
             $lines[] = $this->wording->issue($issue);
         }
         foreach ($this->suggestionLines() as $line) {
             $lines[] = $line;
         }
 
-        $atRisk = true === $verdict?->isDeliverabilityAtRisk();
+        $atRisk = $verdict->isDeliverabilityAtRisk();
 
         return new JsonResponse([
             'ok' => !$atRisk,
             'headline' => $atRisk
-                ? $this->wording->deliverabilityHeadline($verdict?->domain)
-                : $this->wording->deliverabilityFine($verdict?->domain),
+                ? $this->wording->deliverabilityHeadline($verdict->domain)
+                : $this->wording->deliverabilityFine($verdict->domain),
             'lines' => array_values(array_unique($lines)),
         ]);
     }
