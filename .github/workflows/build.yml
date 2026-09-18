@@ -68,3 +68,9 @@ jobs:
 
             - name: Static analysis
               run: vendor/bin/phpstan analyse
+
+            # The same suite again, this time with the vendor directory. Three tests stub
+            # Doctrine's entity manager and skip themselves without it, so the bare matrix above
+            # never runs them — a regression test that never executes is decoration.
+            - name: Tests with dependencies installed
+              run: vendor/bin/phpunit -c phpunit.xml.dist
