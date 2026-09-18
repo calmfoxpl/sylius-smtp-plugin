@@ -257,9 +257,9 @@ class EmailLogEntry
     /** A resend is only offered where there is something left to send. */
     public function canBeResent(): bool
     {
-        return $this->hasFailed()
-            && null !== $this->rawMessage
-            && '' !== $this->rawMessage
-            && [] !== $this->envelopeRecipients;
+        return $this->hasFailed() &&
+            null !== $this->rawMessage &&
+            '' !== $this->rawMessage &&
+            [] !== $this->envelopeRecipients;
     }
 }

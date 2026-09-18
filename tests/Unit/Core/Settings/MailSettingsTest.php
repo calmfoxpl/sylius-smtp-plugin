@@ -6,8 +6,8 @@ namespace Tests\Calmfox\SyliusSmtpPlugin\Unit\Core\Settings;
 
 use Calmfox\SyliusSmtpPlugin\Core\Settings\AuthMethod;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\Encryption;
-use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 use PHPUnit\Framework\TestCase;
+use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 
 final class MailSettingsTest extends TestCase
 {

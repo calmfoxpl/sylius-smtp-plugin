@@ -95,8 +95,8 @@ final class HealthEvaluator
      */
     public function afterSendFailure(HealthState $previous, string $cause, string $message, int $now): HealthState
     {
-        $withinWindow = null !== $previous->sendFailuresSince
-            && $now - $previous->sendFailuresSince <= $this->thresholds->sendFailureWindowSeconds;
+        $withinWindow = null !== $previous->sendFailuresSince &&
+            $now - $previous->sendFailuresSince <= $this->thresholds->sendFailureWindowSeconds;
 
         $failures = $withinWindow ? $previous->sendFailures + 1 : 1;
         $enough = $failures >= $this->thresholds->sendFailuresBeforeAlert || Cause::needsAHuman($cause);

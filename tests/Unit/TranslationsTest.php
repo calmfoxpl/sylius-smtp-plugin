@@ -161,6 +161,7 @@ final class TranslationsTest extends TestCase
                 if (!str_contains($sources, $needle)) {
                     $unused[] = $key;
                 }
+
                 continue;
             }
             // A provider hint: it is its own key, so it has to appear in the catalogue.

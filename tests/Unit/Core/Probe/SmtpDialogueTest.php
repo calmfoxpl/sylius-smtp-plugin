@@ -9,9 +9,9 @@ use Calmfox\SyliusSmtpPlugin\Core\Probe\SmtpDialogue;
 use Calmfox\SyliusSmtpPlugin\Core\Probe\Stage;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\AuthMethod;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\Encryption;
+use PHPUnit\Framework\TestCase;
 use Tests\Calmfox\SyliusSmtpPlugin\Support\ScriptedStream;
 use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
-use PHPUnit\Framework\TestCase;
 
 final class SmtpDialogueTest extends TestCase
 {

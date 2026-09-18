@@ -87,7 +87,7 @@ final class MessageSummaryTest extends TestCase
 
     public function testTheColumnsAreShortEnoughForTheGrid(): void
     {
-        $raw = "Subject: " . str_repeat('very long ', 60) . "\r\nTo: " . implode(', ', array_map(
+        $raw = 'Subject: ' . str_repeat('very long ', 60) . "\r\nTo: " . implode(', ', array_map(
             static fn (int $i): string => sprintf('person%d@example.com', $i),
             range(1, 12),
         )) . "\r\n\r\nbody";

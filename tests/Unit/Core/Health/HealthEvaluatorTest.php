@@ -11,11 +11,11 @@ use Calmfox\SyliusSmtpPlugin\Core\Health\Status;
 use Calmfox\SyliusSmtpPlugin\Core\Health\Thresholds;
 use Calmfox\SyliusSmtpPlugin\Core\Probe\ProbeResult;
 use Calmfox\SyliusSmtpPlugin\Core\Probe\Stage;
-use Calmfox\SyliusSmtpPlugin\Core\Settings\IssueCode;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\Issue;
+use Calmfox\SyliusSmtpPlugin\Core\Settings\IssueCode;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\ResolvedSettings;
-use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 use PHPUnit\Framework\TestCase;
+use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 
 final class HealthEvaluatorTest extends TestCase
 {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Calmfox\SyliusSmtpPlugin\Controller\Admin;
 
-use Calmfox\SyliusSmtpPlugin\Log\Resender;
 use Calmfox\SyliusSmtpPlugin\Log\LogRepository;
+use Calmfox\SyliusSmtpPlugin\Log\Resender;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;

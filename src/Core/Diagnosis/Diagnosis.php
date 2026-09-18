@@ -146,8 +146,8 @@ final class Diagnosis
     {
         $implicitPort = \in_array($settings->port, Encryption::IMPLICIT_TLS_PORTS, true);
 
-        return ($implicitPort && Encryption::SSL !== $settings->encryption)
-            || (!$implicitPort && Encryption::SSL === $settings->encryption);
+        return ($implicitPort && Encryption::SSL !== $settings->encryption) ||
+            (!$implicitPort && Encryption::SSL === $settings->encryption);
     }
 
     private static function certificateWords(string $text): bool

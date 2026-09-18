@@ -8,9 +8,9 @@ use Calmfox\SyliusSmtpPlugin\Core\Diagnosis\Cause;
 use Calmfox\SyliusSmtpPlugin\Core\Diagnosis\Diagnosis;
 use Calmfox\SyliusSmtpPlugin\Core\Diagnosis\Hint;
 use Calmfox\SyliusSmtpPlugin\Core\Settings\Encryption;
-use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Calmfox\SyliusSmtpPlugin\Support\Settings;
 
 final class DiagnosisTest extends TestCase
 {

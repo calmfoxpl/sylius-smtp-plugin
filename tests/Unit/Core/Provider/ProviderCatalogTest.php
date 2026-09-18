@@ -31,6 +31,7 @@ final class ProviderCatalogTest extends TestCase
 
             if ($provider->isCustom()) {
                 self::assertSame('', $provider->host);
+
                 continue;
             }
             self::assertMatchesRegularExpression('/^[a-z0-9.-]+\.[a-z]{2,}$/', $provider->host, $id);

@@ -142,7 +142,7 @@ final class WiringTest extends TestCase
         $extension = self::read('src/DependencyInjection/CalmfoxSyliusSmtpExtension.php');
 
         self::assertStringContainsString("'type' => 'attribute'", $extension);
-        self::assertStringContainsString("/Entity", $extension);
+        self::assertStringContainsString('/Entity', $extension);
         self::assertStringContainsString("'prefix' => 'Calmfox\\SyliusSmtpPlugin\\Entity'", $extension);
 
         foreach (self::filesIn('src/Entity') as $entity) {

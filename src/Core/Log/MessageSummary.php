@@ -80,6 +80,7 @@ final class MessageSummary
             // A header value continued on the next line begins with a space or a tab.
             if (null !== $name && '' !== $line && (' ' === $line[0] || "\t" === $line[0])) {
                 $headers[$name] .= ' ' . trim($line);
+
                 continue;
             }
             if (!preg_match('/^(?<name>[A-Za-z0-9-]+):\s*(?<value>.*)$/', $line, $match)) {
