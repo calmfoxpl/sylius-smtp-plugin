@@ -61,9 +61,9 @@ final class SmtpProbe
         if (!\is_resource($handle)) {
             return ProbeResult::failed(
                 Stage::CONNECT,
-                Diagnosis::fromConnectionError($errno, $error),
+                Diagnosis::fromConnectionError((int) $errno, (string) $error),
                 null,
-                '' !== $error ? $error : 'no answer',
+                '' !== (string) $error ? (string) $error : 'no answer',
                 milliseconds: self::since($started),
             );
         }

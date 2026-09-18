@@ -48,7 +48,7 @@ final class Resender
         }
 
         $settings = $resolved->settings;
-        $secrets = array_values(array_filter([$settings->password]));
+        $secrets = array_filter([$settings->password]);
         $envelope = new Envelope(
             new Address($entry->getEnvelopeSender() ?? $entry->getFromAddress()),
             array_map(static fn (string $address): Address => new Address($address), $entry->getEnvelopeRecipients()),

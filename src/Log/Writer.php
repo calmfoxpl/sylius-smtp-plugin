@@ -40,7 +40,7 @@ final class Writer
     ): ?EmailLogEntry {
         try {
             $summary = MessageSummary::fromRaw($rawMessage);
-            $secrets = array_values(array_filter([$settings->password]));
+            $secrets = array_filter([$settings->password]);
 
             $entry = new EmailLogEntry();
             $entry->setOutcome($outcome);
@@ -74,7 +74,11 @@ final class Writer
         }
     }
 
-    /** A message sent again from the panel: the same row, one more attempt. */
+    /**
+     * A message sent again from the panel: the same row, one more attempt.
+     *
+     * @param list<string> $secrets
+     */
     public function recordResend(EmailLogEntry $entry, bool $sent, ?string $cause, string $error, array $secrets = []): void
     {
         try {

@@ -109,7 +109,11 @@ final class Wording
         return $this->say('headline.recovered', ['%endpoint%' => $settings->endpoint()]);
     }
 
-    /** Everything we know about a failure, in the order it is useful. @return list<string> */
+    /**
+     * Everything we know about a failure, in the order it is useful.
+     *
+     * @return list<string>
+     */
     public function explain(HealthState $state, MailSettings $settings): array
     {
         $lines = [$this->detail($state->cause, $settings)];

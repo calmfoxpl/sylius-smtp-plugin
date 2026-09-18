@@ -76,7 +76,7 @@ final class Notifier
             'provider' => $settings->providerId,
             'reply' => $state->reply,
             'reminder' => $alert->isReminder,
-        ], array_values(array_filter([$settings->password])));
+        ], array_filter([$settings->password]));
 
         if ($alert->isProblem()) {
             $this->logger->critical($this->wording->headline($state, $settings), $context);

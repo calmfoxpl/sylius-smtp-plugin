@@ -51,7 +51,7 @@ final class SocketStream implements Stream
         $line = @fgets($this->handle, 1024);
         $meta = stream_get_meta_data($this->handle);
 
-        if (true === ($meta['timed_out'] ?? false)) {
+        if (true === $meta['timed_out']) {
             // Silence, which the conversation reads as a timeout. Not an exception: a server
             // that stops talking is a finding, not an accident.
             return '';

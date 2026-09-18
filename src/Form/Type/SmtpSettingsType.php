@@ -24,6 +24,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * The settings form.
  *
+ * @extends AbstractType<SmtpSettings>
+ *
  * The password is unmapped on purpose: an empty field means "leave the stored one alone", which
  * is what somebody editing a port and saving expects, and it also means the ciphertext is never
  * sent to a browser and back. The action encrypts whatever was typed.
@@ -130,7 +132,11 @@ final class SmtpSettingsType extends AbstractType
         ]);
     }
 
-    /** Brand names are not translated; only "a server of my own" is a phrase. @return array<string, string> */
+    /**
+     * Brand names are not translated; only "a server of my own" is a phrase.
+     *
+     * @return array<string, string>
+     */
     private function providers(): array
     {
         $choices = [];

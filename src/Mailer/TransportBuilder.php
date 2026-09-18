@@ -11,6 +11,7 @@ use Symfony\Component\Mailer\Transport\Smtp\Auth\CramMd5Authenticator;
 use Symfony\Component\Mailer\Transport\Smtp\Auth\LoginAuthenticator;
 use Symfony\Component\Mailer\Transport\Smtp\Auth\PlainAuthenticator;
 use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
+use Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 
 /**
@@ -59,14 +60,19 @@ final class TransportBuilder
             }
         }
 
+        // The timeout and the TLS options live on the socket stream, and only on that one:
+        // a transport configured to hand its mail to a local process has no socket to set them
+        // on. Asking first is the difference between a setting being ignored and a fatal error.
         $stream = $transport->getStream();
-        $stream->setTimeout((float) $settings->timeout);
+        if ($stream instanceof SocketStream) {
+            $stream->setTimeout((float) $settings->timeout);
 
-        if (!$settings->verifyCertificate && method_exists($stream, 'setStreamOptions')) {
-            // Only ever reached because somebody turned the check off and was warned about it.
-            $stream->setStreamOptions([
-                'ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true],
-            ]);
+            if (!$settings->verifyCertificate) {
+                // Only ever reached because somebody turned the check off and was warned.
+                $stream->setStreamOptions([
+                    'ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true],
+                ]);
+            }
         }
 
         return $this->transports[$fingerprint] = $transport;

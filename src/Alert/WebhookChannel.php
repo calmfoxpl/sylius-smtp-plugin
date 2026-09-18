@@ -95,6 +95,6 @@ final class WebhookChannel
                 'failed_messages' => $state->sendFailures,
                 'explanation' => $explanation,
             ],
-        ], array_values(array_filter([$settings->password])));
+        ], array_filter([$settings->password]));
     }
 }
